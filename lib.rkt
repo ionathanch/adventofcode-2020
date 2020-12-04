@@ -1,3 +1,4 @@
+
 #lang racket
 
 (require
@@ -5,9 +6,11 @@
            make-queue
            enqueue!)
   (only-in 2htdp/batch-io
-           read-lines))
+           read-lines
+           read-file))
 
 (provide problem-input
+         problem-input-all
          show-solution
 
          make-vector-grid
@@ -23,6 +26,7 @@
 
          sum
          != nchar=?
+         char-alphanumeric?
          nzero?
          negate
          pos-or-zero
@@ -65,6 +69,13 @@
   (let* ([filename (~a n #:min-width 2 #:align 'right #:left-pad-string "0")]
          [path     (string-append "../input/" filename ".txt")])
     (read-lines path)))
+
+;; problem-input-all : number? -> string?
+;; Return contents of input file input/xx.txt as a single string.
+(define (problem-input-all n)
+  (let* ([filename (~a n #:min-width 2 #:align 'right #:left-pad-string "0")]
+         [path     (string-append "../input/" filename ".txt")])
+    (read-file path)))
 
 ;; show-solution : a -> b -> void
 ;; Print part1 and part2 on separate lines.
@@ -131,6 +142,11 @@
 ;; nchar=? : char -> char -> boolean
 (define (nchar=? c1 c2)
   (not (char=? c1 c2)))
+
+;; char-alphanumeric? : char -> boolean
+(define (char-alphanumeric? c)
+  (or (char-alphabetic? c)
+      (char-numeric? c)))
 
 
 ;; Number helpers ;;
