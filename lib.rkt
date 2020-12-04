@@ -21,12 +21,19 @@
          show-vector-grid
          show-hash-grid
 
-         ∘ ∂ $ %
+         ∘ ∂ ∂r $ %
          uncurry
+         apply*
+         apply-when
+
+         string->number*
+         string->symbol*
+
+         nchar=?
+         char-alphanumeric?
 
          sum
-         != nchar=?
-         char-alphanumeric?
+         !=
          nzero?
          negate
          pos-or-zero
@@ -54,11 +61,21 @@
 ;; Function helpers ;;
 (define ∘ compose)
 (define ∂ curry)
+(define ∂r curryr)
 
 ;; uncurry : (a1 -> ... -> an -> b) -> ((listof a) -> b)
 (define uncurry
   (curry apply))
 (define $ uncurry)
+
+;; apply* : (a -> b) -> a -> b
+(define (apply* f a)
+  (f a))
+
+;; apply-when : a -> (a -> b) -> b
+;; Apply given function only when a is not #f; return #f otherwise
+(define (apply-when p f)
+  (and p (f p)))
 
 
 ;; IO helpers ;;
@@ -135,6 +152,17 @@
 ;; show-hash-grid : (hashof (value => char)) -> hash-grid -> number -> void
 (define (show-hash-grid char-hash hash-grid [default 0])
   (show-vector-grid char-hash (hash->vectors hash-grid default)))
+
+
+;; Conversion helpers ;;
+
+;; string->number* : (or/c string? #f) -> (or/c number? #f)
+(define (string->number* s)
+  (and (string? s) (string->number s)))
+
+;; string->symbol* : (or/c string? #f) -> (or/c symbol? #f)
+(define (string->symbol* s)
+  (and (string? s) (string->symbol s)))
 
 
 ;; Char helpers ;;
