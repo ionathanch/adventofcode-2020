@@ -14,6 +14,7 @@
          show-solution
 
          make-vector-grid
+         vector-grid-update
          lists->vectors
          vectors->lists
          hash->vectors
@@ -109,6 +110,11 @@
 ;; make-vector-grid : number -> number -> number -> vector-grid
 (define (make-vector-grid width height [default 0])
   (build-vector height (λ (_) (make-vector width default))))
+
+;; vector-grid-update : vector-grid -> (number . number) -> a -> void
+;; Set the vector grid to given value at position (row, col)
+(define (vector-grid-update vector-grid pos value)
+  (vector-set! (vector-ref vector-grid (car pos)) (cdr pos) value))
 
 ;; lists->vectors : list-grid -> vector-grid
 (define (lists->vectors list-grid)
