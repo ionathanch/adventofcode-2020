@@ -2,7 +2,7 @@
 
 (require "../lib.rkt")
 
-(define input (problem-input-all 4))
+(define input (problem-input-grouped 4))
 
 (define test
   "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
@@ -52,7 +52,7 @@ iyr:2011 ecl:brn hgt:59in")
                                          (∂r string-split ":")))
                                  (∂r string-split " ")
                                  (∂r string-replace "\n" " "))
-                                (string-split in "\n\n"))]
+                                in)]
          [passports (map (∂ foldl passport-set default-passport)
                          passport-entries)]
          [valid-raw? (struct/c passport string? string? string? string? string? string? string? any/c)]

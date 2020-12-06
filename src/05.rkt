@@ -9,8 +9,8 @@
 (define input (map string->seat (problem-input 5)))
 
 (define-values (part1 part2)
-  (let* ([minimum (apply min input)]
-         [maximum (apply max input)]
+  (let* ([minimum ($ min input)]
+         [maximum ($ max input)]
          [seats (list->set (range minimum (add1 maximum)))]
          [filled (list->set input)])
     (values maximum (set-first (set-subtract seats filled)))))

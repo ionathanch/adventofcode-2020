@@ -11,6 +11,7 @@
 
 (provide problem-input
          problem-input-all
+         problem-input-grouped
          show-solution
 
          make-vector-grid
@@ -94,6 +95,12 @@
   (let* ([filename (~a n #:min-width 2 #:align 'right #:left-pad-string "0")]
          [path     (string-append "../input/" filename ".txt")])
     (read-file path)))
+
+;; problem-input-grouped : number? -> (listof string?)
+;; Return contents of input file input/xx.txt as a list of strings,
+;; where each string is a group of lines separated by newlines.
+(define (problem-input-grouped n)
+  (string-split (problem-input-all n) "\n\n"))
 
 ;; show-solution : a -> b -> void
 ;; Print part1 and part2 on separate lines.
