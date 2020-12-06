@@ -1,7 +1,8 @@
-
 #lang racket
 
 (require
+  curly-fn
+  threading
   (only-in data/queue
            make-queue
            enqueue!)
@@ -9,7 +10,10 @@
            read-lines
            read-file))
 
-(provide problem-input
+(provide (all-from-out curly-fn
+                       threading)
+
+         problem-input
          problem-input-all
          problem-input-grouped
          show-solution
@@ -25,8 +29,6 @@
 
          ∘ ∂ ∂r $ %
          uncurry
-         apply*
-         apply-when
 
          string->number*
          string->symbol*
@@ -69,15 +71,6 @@
 (define uncurry
   (curry apply))
 (define $ uncurry)
-
-;; apply* : (a -> b) -> a -> b
-(define (apply* f a)
-  (f a))
-
-;; apply-when : a -> (a -> b) -> b
-;; Apply given function only when a is not #f; return #f otherwise
-(define (apply-when p f)
-  (and p (f p)))
 
 
 ;; IO helpers ;;
