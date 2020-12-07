@@ -20,19 +20,18 @@
                   (add-vertex! contains outer)]))))
     (values contained contains)))
 
-(define (count-bags graph source multiplier)
+(define (count-bags graph source)
   (let ([neighbours (get-neighbours graph source)])
-    (* (apply + 1 (map (λ (neighbour)
-                         (let ([weight (edge-weight graph source neighbour)])
-                           (count-bags graph neighbour weight)))
-                       neighbours))
-       multiplier)))
+    (apply + 1 (map (λ (neighbour)
+                      (let ([weight (edge-weight graph source neighbour)])
+                        (* weight (count-bags graph neighbour))))
+                    neighbours))))
 
 (define-values (part1 part2)
   (let*-values ([(contained contains) (strings->graphs input)]
                 [(bfs-shiny-gold pred) (bfs contained "shiny gold")]
-                [(reachables) (count (∘ (∂ != +inf.0) cdr) (hash->list bfs-shiny-gold))]
-                [(total-bags) (count-bags contains "shiny gold" 1)])
+                [(reachables) (count (λ~> cdr (!= +inf.0)) (hash->list bfs-shiny-gold))]
+                [(total-bags) (count-bags contains "shiny gold")])
     (values (sub1 reachables) (sub1 total-bags))))
 
 (show-solution part1 part2)

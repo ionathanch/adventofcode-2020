@@ -1,6 +1,6 @@
-#lang racket
+#lang curly-fn racket
 
-(require "../lib.rkt")
+(require "lib.rkt")
 
 (define (parse in) in)
 

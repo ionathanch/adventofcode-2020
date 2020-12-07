@@ -1,7 +1,6 @@
 #lang racket
 
 (require
-  curly-fn
   threading
   (only-in data/queue
            make-queue
@@ -10,8 +9,7 @@
            read-lines
            read-file))
 
-(provide (all-from-out curly-fn
-                       threading)
+(provide (all-from-out threading)
 
          problem-input
          problem-input-all
