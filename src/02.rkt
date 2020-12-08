@@ -13,17 +13,14 @@
 (define input (map parse (problem-input 2)))
 
 (define part1
-  (length (filter (λ (entry)
-                    (match-let* ([(list min max char pass) entry]
-                                 [occurrences (length (filter (∂ char=? char) pass))])
-                      (<= min occurrences max)))
-                  input)))
+  (count (match-lambda [(list min max char pass)
+                        (<= min (count (λ~> (char=? char)) pass) max)])
+         input))
 
 (define part2
-  (length (filter (λ (entry)
-                    (match-let* ([(list min max char pass) entry])
-                      (xor (char=? (list-ref pass (sub1 min)) char)
-                           (char=? (list-ref pass (sub1 max)) char))))
-                  input)))
+  (count (match-lambda [(list min max char pass)
+                        (xor (char=? (list-ref pass (sub1 min)) char)
+                             (char=? (list-ref pass (sub1 max)) char))])
+         input))
 
 (show-solution part1 part2)

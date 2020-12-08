@@ -22,10 +22,10 @@
 
 (define (count-bags graph source)
   (let ([neighbours (get-neighbours graph source)])
-    (apply + 1 (map (λ (neighbour)
+    (add1 (sum (map (λ (neighbour)
                       (let ([weight (edge-weight graph source neighbour)])
                         (* weight (count-bags graph neighbour))))
-                    neighbours))))
+                    neighbours)))))
 
 (define-values (part1 part2)
   (let*-values ([(contained contains) (strings->graphs input)]
