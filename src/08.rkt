@@ -10,28 +10,27 @@
 
 (define input (list->vector (map parse (problem-input 8))))
 
-(define (run instrs [part1 #f])
-  (let loop ([pc 0] [acc 0] [ran (set)])
+(define (run instrs try)
+  (let loop ([pc 0] [acc 0] [ran (set)] [backtrack (const #f)])
+    (define (get-backtrack next-pc)
+      (if (and try (= pc try))
+          (const (loop next-pc acc (set-add ran pc) (const #f)))
+          backtrack))
     (cond
       [(>= pc (vector-length instrs)) acc]
-      [(set-member? ran pc) (if part1 acc #f)]
+      [(set-member? ran pc) (if try (backtrack) acc)]
       [else (match (vector-ref instrs pc)
-              [`(nop . ,arg) (loop (add1 pc) acc (set-add ran pc))]
-              [`(acc . ,arg) (loop (add1 pc) (+ acc arg) (set-add ran pc))]
-              [`(jmp . ,arg) (loop (+ pc arg) acc (set-add ran pc))])])))
+              [`(acc . ,arg) (loop (add1 pc) (+ acc arg) (set-add ran pc) backtrack)]
+              [`(nop . ,arg) (loop (add1 pc) acc (set-add ran pc) (get-backtrack (+ pc arg)))]
+              [`(jmp . ,arg) (loop (+ pc arg) acc (set-add ran pc) (get-backtrack (add1 pc)))])])))
 
 (define (try-run instrs)
-  (for/last ([i (range (vector-length instrs))]
-             #:when (member (car (vector-ref instrs i)) '(nop jmp)))
-    (define acc
-      (match-let* ([`(,op . ,arg) (vector-ref instrs i)]
-                   [op (if (symbol=? op 'nop) 'jmp 'nop)])
-        (or (run instrs)
-            (run (vector-set!* instrs i `(,op . ,arg))))))
-    #:final acc
-    acc))
+  (for/or ([i (range (vector-length instrs))]
+           #:when (member (car (vector-ref instrs i)) '(nop jmp)))
+    (match-let* ([`(,op . ,arg) (vector-ref instrs i)])
+      (run instrs i))))
 
 (define-values (part1 part2)
-  (values (run input #t) (try-run input)))
+  (values (run input #f) (try-run input)))
 
 (show-solution part1 part2)
