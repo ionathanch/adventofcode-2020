@@ -43,7 +43,7 @@
          number->digits-reverse
          digits->number
 
-         rac
+         snoc
          scanl scanr
          list-ref*
          repeat
@@ -228,9 +228,9 @@
 
 ;; List helpers ;;
 
-;; rac : (listof any) -> any -> (listof any)
+;; snoc : (listof any) -> any -> (listof any)
 ;; Append element to the back of the list.
-(define (rac lst v)
+(define (snoc lst v)
   (append lst (list v)))
 
 ;; scanl : (a -> a -> a) -> (listof a) -> (listof a)
