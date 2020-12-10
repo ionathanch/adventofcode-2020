@@ -3,25 +3,29 @@
 (require "../lib.rkt")
 
 (define input (map string->number (problem-input 9)))
+(define input* (list->vector input))
 
-(define (pair-sum lst target)
-  (for*/or ([i lst]
-            [j lst])
-    (= (+ i j) target)))
+(define (pair-sum start end)
+  (for*/or ([i (range start end)]
+            [j (range start end)])
+    (= (vector-ref input* end)
+       (+ (vector-ref input* i)
+          (vector-ref input* j)))))
 
 (define part1
-  (let loop ([current (take input 25)] [next (list-ref input 25)] [remain (drop input 26)])
-    (if (pair-sum current next)
-        (loop (snoc (rest current) next) (first remain) (rest remain))
-        next)))
+  (let loop ([start 0] [end 25])
+    (if (pair-sum start end)
+        (loop (add1 start) (add1 end))
+        (vector-ref input* end))))
 
 (define part2
-  (let loop ([current '()] [remain input] [sum 0])
+  (let loop ([start 0] [end 0] [sum 0])
     (cond
       [(< sum part1)
-       (loop (snoc current (first remain)) (rest remain) (+ sum (first remain)))]
+       (loop start (add1 end) (+ sum (vector-ref input* end)))]
       [(> sum part1)
-       (loop (rest current) remain (- sum (first current)))]
-      [else (+ (apply min current) (apply max current))])))
+       (loop (add1 start) end (- sum (vector-ref input* start)))]
+      [else (let ([contig (drop (take input end) start)])
+              (+ (apply min contig) (apply max contig)))])))
 
 (show-solution part1 part2)
