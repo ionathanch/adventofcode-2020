@@ -11,7 +11,7 @@
    #{char=? % #\#}
    (for*/list ([r* (in-range (max 0 (sub1 r)) (min (+ r 2) length))]
                [c* (in-range (max 0 (sub1 c)) (min (+ c 2) width))]
-               #:when (not (and (= r r*) (= c c*))))
+               #:unless (and (= r r*) (= c c*)))
      (vector-ref (vector-ref seats r*) c*))))
 
 (define (visible-in seats r c dr dc)
@@ -27,7 +27,7 @@
       [else (in-cycle `(,c))]))
   (for/or ([r* rs]
            [c* cs]
-           #:when (not (and (= r r*) (= c c*))))
+           #:unless (and (= r r*) (= c c*)))
     (define seat (vector-ref (vector-ref seats r*) c*))
     #:final (member seat '(#\L #\#))
     (char=? seat #\#)))
@@ -38,8 +38,8 @@
 
 (define (step-seats counter die seats)
   (let ([new-seats (vector-map vector-copy (vector-copy seats))])
-    (for* ([r (range 0 length)]
-           [c (range 0 width)])
+    (for* ([r (in-range 0 length)]
+           [c (in-range 0 width)])
       (let ([seat (vector-ref (vector-ref seats r) c)])
         (cond
           [(and (char=? seat #\L)
@@ -51,12 +51,12 @@
     new-seats))
 
 (define (stable-count counter die)
-  (let loop ([seats input] [steps 0])
+  (let loop ([seats input])
     (let ([new-seats (step-seats counter die seats)])
       (if (equal? seats new-seats)
           (vector-count #{char=? % #\#}
                         (apply vector-append (vector->list seats)))
-          (loop new-seats (add1 steps))))))
+          (loop new-seats)))))
 
 (define part1
   (stable-count neighbours 4))
