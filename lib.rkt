@@ -20,6 +20,7 @@
          vector-grid-update
          lists->vectors
          vectors->lists
+         lists->hash
          hash->vectors
          show-list-grid
          show-vector-grid
@@ -121,6 +122,15 @@
 ;; vectors->lists : vector-grid -> list-grid
 (define (vectors->lists vector-grid)
   (map vector->list (vector->list vector-grid)))
+
+;; lists->hash : list-grid -> hash-grid
+(define (lists->hash list-grid)
+  (let ([width (length (first list-grid))]
+        [length (length list-grid)])
+    (for*/fold ([hash-grid (hash)])
+               ([x (in-range width)]
+                [y (in-range length)])
+      (hash-set hash-grid (cons x y) (list-ref (list-ref list-grid y) x)))))
 
 ;; hash->vectors : hash-grid -> number -> vector-grid
 ;; Where the position is not in the hash-grid,
