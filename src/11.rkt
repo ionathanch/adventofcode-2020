@@ -9,22 +9,22 @@
 (define (neighbours seats r c)
   (count
    #{char=? % #\#}
-   (for*/list ([r* (range (max 0 (sub1 r)) (min (+ r 2) length))]
-               [c* (range (max 0 (sub1 c)) (min (+ c 2) width))]
+   (for*/list ([r* (in-range (max 0 (sub1 r)) (min (+ r 2) length))]
+               [c* (in-range (max 0 (sub1 c)) (min (+ c 2) width))]
                #:when (not (and (= r r*) (= c c*))))
      (vector-ref (vector-ref seats r*) c*))))
 
 (define (visible-in seats r c dr dc)
   (define rs
     (cond
-      [(positive? dr) (range r length dr)]
-      [(negative? dr) (range r -1 dr)]
-      [else (build-list length (const r))]))
+      [(positive? dr) (in-range r length dr)]
+      [(negative? dr) (in-range r -1 dr)]
+      [else (in-cycle `(,r))]))
   (define cs
     (cond
-      [(positive? dc) (range c width dc)]
-      [(negative? dc) (range c -1 dc)]
-      [else (build-list width (const c))]))
+      [(positive? dc) (in-range c width dc)]
+      [(negative? dc) (in-range c -1 dc)]
+      [else (in-cycle `(,c))]))
   (for/or ([r* rs]
            [c* cs]
            #:when (not (and (= r r*) (= c c*))))
@@ -33,8 +33,8 @@
     (char=? seat #\#)))
 
 (define (visible seats r c)
-  (count identity (map (match-lambda [`(,dr ,dc) (visible-in seats r c dr dc)])
-                       '((-1 -1) (-1 0) (-1 1) (0 -1) (0 1) (1 -1) (1 0) (1 1)))))
+  (count (match-lambda [`(,dr ,dc) (visible-in seats r c dr dc)])
+         '((-1 -1) (-1 0) (-1 1) (0 -1) (0 1) (1 -1) (1 0) (1 1))))
 
 (define (step-seats counter die seats)
   (let ([new-seats (vector-map vector-copy (vector-copy seats))])
