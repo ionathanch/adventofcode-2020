@@ -1,7 +1,6 @@
-#lang curly-fn racket
+#lang racket
 
-(require threading
-         "../lib.rkt")
+(require "../lib.rkt")
 
 (define (parse line)
   (match line
@@ -10,58 +9,33 @@
 
 (define input (map parse (problem-input 12)))
 
-(define (turn curr-dir dir angle)
-  (define dirs
-    (if (symbol=? dir 'R)
-        '(N E S W)
-        '(N W S E)))
-  (define index (index-of dirs curr-dir))
-  (list-ref dirs (modulo (+ index (/ angle 90)) 4)))
-
-(define (rotate x y dir amt)
-  (cond
-    [(= amt 180) (list (- x) (- y))]
-    [(= amt 270) (rotate x y (if (symbol=? dir 'R) 'L 'R) 90)]
-    [(symbol=? dir 'R) (list (- y) x)]
-    [(symbol=? dir 'L) (list y (- x))]))
-
-(define (move instr x y dir)
+(define (move instr p1 p2 x y dx dy)
   (match instr
-    [`(N ,amt) (values x (- y amt) dir)]
-    [`(E ,amt) (values (+ x amt) y dir)]
-    [`(S ,amt) (values x (+ y amt) dir)]
-    [`(W ,amt) (values (- x amt) y dir)]
-    [`(F ,amt) (move `(,dir ,amt) x y dir)]
-    [`(,lr ,amt) (values x y (turn dir lr amt))]))
+    [`(N ,amt) (values x (- y (* amt p1)) dx (- dy (* amt p2)))]
+    [`(E ,amt) (values (+ x (* amt p1)) y (+ dx (* amt p2)) dy)]
+    [`(S ,amt) (values x (+ y (* amt p1)) dx (+ dy (* amt p2)))]
+    [`(W ,amt) (values (- x (* amt p1)) y (- dx (* amt p2)) dy)]
+    [`(F ,amt) (values (+ x (* dx amt)) (+ y (* dy amt)) dx dy)]
+    [(or '(R 90) '(L 270)) (values x y (- dy) dx)]
+    [(or '(L 90) '(R 270)) (values x y dy (- dx))]
+    [`(,_ 180) (values x y (- dx) (- dy))]))
 
-(define (move* instr x-ship y-ship x-wpt y-wpt)
-  (match instr
-    [`(N ,amt) (values x-ship y-ship x-wpt (- y-wpt amt))]
-    [`(E ,amt) (values x-ship y-ship (+ x-wpt amt) y-wpt)]
-    [`(S ,amt) (values x-ship y-ship x-wpt (+ y-wpt amt))]
-    [`(W ,amt) (values x-ship y-ship (- x-wpt amt) y-wpt)]
-    [`(F ,amt) (values (+ x-ship (* x-wpt amt)) (+ y-ship (* y-wpt amt)) x-wpt y-wpt)]
-    [`(,lr ,amt)
-     (match-let ([(list x-wpt y-wpt) (rotate x-wpt y-wpt lr amt)])
-       (values x-ship y-ship x-wpt y-wpt))]))
+(define part1
+  (match-let-values
+   ([(x y dx dy)
+     (for/fold ([x  0] [y  0]
+                [dx 1] [dy 0])
+               ([instr input])
+       (move instr 1 0 x y dx dy))])
+   (+ (abs x) (abs y))))
 
-(define (part1)
-  (define-values (x y dir)
-    (for/fold ([x 0]
-               [y 0]
-               [dir 'E])
-              ([instr input])
-      (move instr x y dir)))
-  (+ (abs x) (abs y)))
+(define part2
+  (match-let-values
+   ([(x-ship y-ship x-wpt y-wpt)
+     (for/fold ([x-ship 0] [y-ship 0]
+                [x-wpt 10] [y-wpt -1])
+               ([instr input])
+       (move instr 0 1 x-ship y-ship x-wpt y-wpt))])
+   (+ (abs x-ship) (abs y-ship))))
 
-(define (part2)
-  (define-values (x-ship y-ship x-wpt y-wpt)
-    (for/fold ([x-ship 0]
-               [y-ship 0]
-               [x-wpt 10]
-               [y-wpt -1])
-              ([instr input])
-      (move* instr x-ship y-ship x-wpt y-wpt)))
-  (+ (abs x-ship) (abs y-ship)))
-
-(show-solution (part1) (part2))
+(show-solution part1 part2)
