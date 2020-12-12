@@ -7,30 +7,20 @@
 (define width (vector-length (vector-ref input 0)))
 (define length (vector-length input))
 
-(define (first-seat r c dr dc)
-  (define rs
-    (cond
-      [(positive? dr) (in-range r length dr)]
-      [(negative? dr) (in-range r -1 dr)]
-      [else (in-cycle `(,r))]))
-  (define cs
-    (cond
-      [(positive? dc) (in-range c width dc)]
-      [(negative? dc) (in-range c -1 dc)]
-      [else (in-cycle `(,c))]))
-  (for/or ([r* rs]
-           [c* cs]
-           #:unless (and (= r r*) (= c c*)))
-    (define seat (vector-ref (vector-ref input r*) c*))
-    (and (member seat '(#\L #\#))
-         (list r* c*))))
-
 (define first-seats
   (for*/hash ([r (in-range 0 length)]
               [c (in-range 0 width)])
     (values (list r c)
-            (filter-map (match-lambda [`(,dr ,dc) (first-seat r c dr dc)])
-                        '((-1 -1) (-1 0) (-1 1) (0 -1) (0 1) (1 -1) (1 0) (1 1))))))
+            (for*/list ([dr '(-1 0 1)]
+                        [dc '(-1 0 1)]
+                        #:unless (and (zero? dr) (zero? dc)))
+              (let loop ([r (+ r dr)]
+                         [c (+ c dc)])
+                (cond
+                  [(not (and (<= 0 r (sub1 length))
+                             (<= 0 c (sub1 width)))) #f]
+                  [(char=? (vector-ref (vector-ref input r) c) #\L) (list r c)]
+                  [else (loop (+ r dr) (+ c dc))]))))))
 
 (define (neighbours seats r c)
   (for*/sum ([r* (in-range (max 0 (sub1 r)) (min (+ r 2) length))]
@@ -40,7 +30,7 @@
 
 (define (visible seats r c)
   (count
-   (match-lambda [`(,r* ,c*) (char=? (vector-ref (vector-ref seats r*) c*) #\#)])
+   (match-lambda [`(,r* ,c*) (char=? (vector-ref (vector-ref seats r*) c*) #\#)] [#f #f])
    (hash-ref first-seats (list r c))))
 
 (define (step-seats counter die seats)
