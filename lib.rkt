@@ -43,6 +43,7 @@
          number->digits
          number->digits-reverse
          digits->number
+         string->binary
 
          snoc
          scanl scanr
@@ -234,6 +235,12 @@
   (let loop ([n 0] [ns ns])
     (if (empty? ns) n
         (loop (+ (* n 10) (car ns)) (cdr ns)))))
+
+;; string->binary : string -> number
+;; Given a string representation of a binary number,
+;; convert it to the number it represents
+(define (string->binary str)
+  (string->number (string-append "#b" str)))
 
 
 ;; List helpers ;;
