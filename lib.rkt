@@ -10,59 +10,11 @@
            read-file))
 
 (provide (all-from-out threading)
-
-         problem-input
-         problem-input-all
-         problem-input-grouped
-         show-solution
-
-         make-vector-grid
-         vector-grid-update
-         lists->vectors
-         vectors->lists
-         lists->hash
-         hash->vectors
-         show-list-grid
-         show-vector-grid
-         show-hash-grid
-
-         ∘ ∂ ∂r $ %
-         uncurry
-
-         string->number*
-         string->symbol*
-
-         nchar=?
-         char-alphanumeric?
-
-         sum
-         !=
-         nzero?
-         negate
-         pos-or-zero
-         number->digits
-         number->digits-reverse
-         digits->number
-         string->binary
-
-         snoc
-         scanl scanr
-         list-ref*
-         repeat
-         chunks-of
-         transpose
-         list->queue
-
-         vector-first
-         vector-last
-         vector-ref*
-         vector-grid-ref*
-         vector-set!*
-         hash->vector
-         vector->hash)
+         (all-defined-out))
 
 
 ;; Function helpers ;;
+
 (define ∘ compose)
 (define ∂ curry)
 (define ∂r curryr)
@@ -103,18 +55,35 @@
 
 ;; Grid helpers ;;
 ;; A grid of values might be stored in three different ways:
-;; - As a hashtable from positions (number . number) to values; or
+;; - As a hashtable from coordinates (list x y) to values; or
 ;; - As a vector of vectors of values; or
 ;; - As a list of lists of values.
+;; coord = (list? number? number?)
+;; Coordinate axes point right (x-axis) and down (y-axis).
 
 ;; make-vector-grid : number -> number -> number -> vector-grid
 (define (make-vector-grid width height [default 0])
   (build-vector height (λ (_) (make-vector width default))))
 
-;; vector-grid-update : vector-grid -> (number . number) -> a -> void
+;; vector-grid-update : vector-grid -> coord -> a -> void
 ;; Set the vector grid to given value at position (row, col)
-(define (vector-grid-update vector-grid pos value)
-  (vector-set! (vector-ref vector-grid (car pos)) (cdr pos) value))
+(define (vector-grid-update vector-grid coord value)
+  (vector-set! (vector-ref vector-grid (second coord)) (first coord) value))
+
+;; vector-grid-ref* : (vectorof (vectorof any)) -> coord -> any -> any
+;; Given coordinates (x, y), in the yth vector, find the xth element.
+;; If either x or y are beyond the indices of the vectors,
+;; return the default value provided.
+(define (vector-grid-ref* grid coord failure-result)
+  (match-let ([(list x y) coord]
+              [y-len (vector-length grid)])
+    (if (or (< y 0) (>= y y-len))
+        failure-result
+        (let* ([row (vector-ref grid y)]
+               [x-len (vector-length row)])
+          (if (or (< x 0) (>= x x-len))
+              failure-result
+              (vector-ref row x))))))
 
 ;; lists->vectors : list-grid -> vector-grid
 (define (lists->vectors list-grid)
@@ -131,24 +100,24 @@
     (for*/fold ([hash-grid (hash)])
                ([x (in-range width)]
                 [y (in-range length)])
-      (hash-set hash-grid (cons x y) (list-ref (list-ref list-grid y) x)))))
+      (hash-set hash-grid (list x y) (list-ref (list-ref list-grid y) x)))))
 
 ;; hash->vectors : hash-grid -> number -> vector-grid
-;; Where the position is not in the hash-grid,
+;; When a coordinate is not in the hash-grid,
 ;; the vector-grid takes on the default value.
 (define (hash->vectors hash-grid [default 0])
   (let* ([keys (hash-keys hash-grid)]
-         [xs (map car keys)]
-         [ys (map cdr keys)]
+         [xs (map first keys)]
+         [ys (map second keys)]
          [min-x (apply min xs)]
          [min-y (apply min ys)]
          [width  (add1 (- (apply max xs) min-x))]
          [height (add1 (- (apply max ys) min-y))]
          [vector-grid (make-vector-grid width height default)])
     (hash-for-each
-     hash-grid (λ (pos val)
-                 (let ([x (- (car pos) min-x)]
-                       [y (- (cdr pos) min-y)])
+     hash-grid (λ (coord val)
+                 (let ([x (- (first coord) min-x)]
+                       [y (- (second coord) min-y)])
                    (vector-set! (vector-ref vector-grid y) x val))))
     vector-grid))
 
@@ -169,7 +138,7 @@
   (show-vector-grid char-hash (hash->vectors hash-grid default)))
 
 
-;; Conversion helpers ;;
+;; String helpers ;;
 
 ;; string->number* : (or/c string? #f) -> (or/c number? #f)
 (define (string->number* s)
@@ -178,6 +147,23 @@
 ;; string->symbol* : (or/c string? #f) -> (or/c symbol? #f)
 (define (string->symbol* s)
   (and (string? s) (string->symbol s)))
+
+;; string->binary : string? -> number?
+;; Given a string representation of a binary number,
+;; convert it to the number it represents
+(define (string->binary str)
+  (string->number (string-append "#b" str)))
+
+;; string-replaces : string? -> (listof (list? string? string?)) -> string
+;; Perform string replacements in order,
+;; so that later replacments may affect earlier ones
+(define (string-replaces str replaces)
+  (if (empty? replaces)
+      str
+      (string-replaces (string-replace str
+                                       (caar replaces)
+                                       (cadar replaces))
+                       (rest replaces))))
 
 
 ;; Char helpers ;;
@@ -235,12 +221,6 @@
   (let loop ([n 0] [ns ns])
     (if (empty? ns) n
         (loop (+ (* n 10) (car ns)) (cdr ns)))))
-
-;; string->binary : string -> number
-;; Given a string representation of a binary number,
-;; convert it to the number it represents
-(define (string->binary str)
-  (string->number (string-append "#b" str)))
 
 
 ;; List helpers ;;
@@ -326,21 +306,6 @@
   (if (>= pos (vector-length vec))
       failure-result
       (vector-ref vec pos)))
-
-;; vector-grid-ref* : (vectorof (vectorof any)) -> (list number number) -> any -> any
-;; Given coordinates (x, y), in the yth vector, find the xth element.
-;; If either x or y are beyond the indices of the vectors,
-;; return the default value provided.
-(define (vector-grid-ref* grid coord failure-result)
-  (match-let ([(list x y) coord]
-              [y-len (vector-length grid)])
-    (if (or (< y 0) (>= y y-len))
-        failure-result
-        (let* ([row (vector-ref grid y)]
-               [x-len (vector-length row)])
-          (if (or (< x 0) (>= x x-len))
-              failure-result
-              (vector-ref row x))))))
 
 ;; vector-set!* : (vectorof any) -> number -> any -> (vectorof any)
 ;; Set the value at given index in a new vector, then return that vector

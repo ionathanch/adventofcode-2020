@@ -1,7 +1,6 @@
 #lang curly-fn racket
 
-(require threading
-         "../lib.rkt")
+(require "../lib.rkt")
 
 (define input (lists->vectors (map string->list (problem-input 11))))
 (define width (vector-length (vector-ref input 0)))

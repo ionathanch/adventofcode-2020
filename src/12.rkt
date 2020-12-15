@@ -21,21 +21,17 @@
     [`(,_ 180) (values x y (- dx) (- dy))]))
 
 (define part1
-  (match-let-values
-   ([(x y dx dy)
-     (for/fold ([x  0] [y  0]
-                [dx 1] [dy 0])
-               ([instr input])
-       (move instr 1 0 x y dx dy))])
-   (+ (abs x) (abs y))))
+  (for/fold ([x  0] [y  0]
+             [dx 1] [dy 0]
+             #:result (+ (abs x) (abs y)))
+            ([instr input])
+    (move instr 1 0 x y dx dy)))
 
 (define part2
-  (match-let-values
-   ([(x-ship y-ship x-wpt y-wpt)
-     (for/fold ([x-ship 0] [y-ship 0]
-                [x-wpt 10] [y-wpt -1])
-               ([instr input])
-       (move instr 0 1 x-ship y-ship x-wpt y-wpt))])
-   (+ (abs x-ship) (abs y-ship))))
+  (for/fold ([x-ship 0] [y-ship 0]
+             [x-wpt 10] [y-wpt -1]
+             #:result (+ (abs x-ship) (abs y-ship)))
+            ([instr input])
+    (move instr 0 1 x-ship y-ship x-wpt y-wpt)))
 
 (show-solution part1 part2)
