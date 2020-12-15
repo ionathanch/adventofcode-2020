@@ -1,4 +1,5 @@
 **/*.bak
 **/*.rkt~
 **/*.txt~
+**/*.exe
 **/compiled/
