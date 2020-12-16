@@ -225,6 +225,10 @@
 
 ;; List helpers ;;
 
+;; singleton? : (listof any) -> boolean
+(define (singleton? lst)
+  (= 1 (length lst)))
+
 ;; snoc : (listof any) -> any -> (listof any)
 ;; Append element to the back of the list.
 (define (snoc lst v)
@@ -329,3 +333,10 @@
 (define (vector->hash vec)
   (let ([kvs (map cons (range (vector-length vec)) (vector->list vec))])
     (make-immutable-hash kvs)))
+
+;; vector-index-where : (vectorof a) -> (a -> boolean) -> a
+;; Return the first element of the vector that satisfies the given predicate
+(define (vector-index-where vec p)
+  (for/first ([i (vector-length vec)]
+              #:when (p (vector-ref vec i)))
+    i))
