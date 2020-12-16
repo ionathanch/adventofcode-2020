@@ -23,28 +23,26 @@
 
 (define part1
   (for*/sum ([ticket tickets]
-             [field ticket])
-    (if (any-valid-ranges/c field) 0 field)))
+             [field ticket]
+             #:unless (any-valid-ranges/c field))
+    field))
 
 (define part2
-  (let ([fields (length ticket)])
+  (let ([fields (length ticket)]
+        [valid-tickets (filter #{andmap any-valid-ranges/c %} tickets)])
     (define valid-ranges-fields
-      (for*/fold ([valid-ranges-fields (make-list fields (range fields))])
-                 ([valid-ticket (filter #{andmap any-valid-ranges/c %} tickets)]
-                  [i fields]
+      (for*/fold ([valid-ranges-fields (make-list fields '())])
+                 ([i fields]
                   [j fields])
-        (let ([valid-range/c (list-ref valid-range/cs j)]
-              [valid-range-fields (list-ref valid-ranges-fields j)])
-          (if (valid-range/c (list-ref valid-ticket i))
-              valid-ranges-fields
-              (list-set valid-ranges-fields j (remove i valid-range-fields))))))
+        (if (andmap #{(list-ref valid-range/cs j) (list-ref % i)} valid-tickets)
+            (list-update valid-ranges-fields j #{cons i %})
+            valid-ranges-fields)))
     (define (solve valid-ranges-fields)
       (let ([j (index-where valid-ranges-fields (and/c list? singleton?))])
         (if j
-            (let* ([i (first (list-ref valid-ranges-fields j))]
-                   [valid-ranges-fields (map #{if (list? %) (remove i %) %}
-                                             valid-ranges-fields)])
-              (solve (list-set valid-ranges-fields j i)))
+            (let* ([i (first (list-ref valid-ranges-fields j))])
+              (solve (map #{if (list? %) (remove i %) %}
+                          (list-set valid-ranges-fields j i))))
             valid-ranges-fields)))
     (apply * (map #{list-ref ticket %}
                   (take (solve valid-ranges-fields) 6)))))
