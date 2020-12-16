@@ -165,6 +165,14 @@
                                        (cadar replaces))
                        (rest replaces))))
 
+;; string-lines : string? -> (listof string?)
+(define (string-lines str)
+  (string-split str "\n"))
+
+;; string-csv : string? -> [string? -> a] -> (listof a)
+(define (string-csv str [f identity])
+  (map f (string-split str ",")))
+
 
 ;; Char helpers ;;
 

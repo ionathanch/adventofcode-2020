@@ -9,17 +9,17 @@
          [(regexp #px".+: (\\d+)-(\\d+) or (\\d+)-(\\d+)" (list _ from1 to1 from2 to2))
           (or/c (integer-in (string->number from1) (string->number to1))
                 (integer-in (string->number from2) (string->number to2)))])
-       (string-split (first input) "\n")))
+       (string-lines (first input))))
 
 (define any-valid-ranges/c
   (apply or/c valid-range/cs))
 
 (define ticket
-  (map string->number (string-split (second (string-split (second input) "\n")) ",")))
+  (string-csv (second (string-lines (second input))) string->number))
 
 (define tickets
-  (map (λ~> (string-split ",") (map string->number _))
-       (rest (string-split (third input) "\n"))))
+  (map #{string-csv % string->number}
+       (rest (string-lines (third input)))))
 
 (define part1
   (for*/sum ([ticket tickets]
