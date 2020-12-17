@@ -24,6 +24,11 @@
   (curry apply))
 (define $ uncurry)
 
+;; iterate : (a -> a) -> number -> (a -> a)
+(define ((iterate f n) a)
+  (let loop ([a a] [n n])
+    (if (zero? n) a (loop (f a) (sub1 n)))))
+
 
 ;; IO helpers ;;
 
