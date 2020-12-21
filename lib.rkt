@@ -34,113 +34,28 @@
 
 ;; problem-input : number? -> (listof string?)
 ;; Return contents of input file input/xx.txt as lines of strings.
-(define (problem-input n)
+(define (problem-input n [suffix ""])
   (let* ([filename (~a n #:min-width 2 #:align 'right #:left-pad-string "0")]
-         [path     (string-append "../input/" filename ".txt")])
+         [path     (string-append "../input/" filename suffix ".txt")])
     (read-lines path)))
 
 ;; problem-input-all : number? -> string?
 ;; Return contents of input file input/xx.txt as a single string.
-(define (problem-input-all n)
+(define (problem-input-all n [suffix ""])
   (let* ([filename (~a n #:min-width 2 #:align 'right #:left-pad-string "0")]
-         [path     (string-append "../input/" filename ".txt")])
+         [path     (string-append "../input/" filename suffix ".txt")])
     (read-file path)))
 
 ;; problem-input-grouped : number? -> (listof string?)
 ;; Return contents of input file input/xx.txt as a list of strings,
 ;; where each string is a group of lines separated by newlines.
-(define (problem-input-grouped n)
-  (string-split (problem-input-all n) "\n\n"))
+(define (problem-input-grouped n [suffix ""])
+  (string-split (problem-input-all n suffix) "\n\n"))
 
 ;; show-solution : a -> b -> void
 ;; Print part1 and part2 on separate lines.
 (define (show-solution part1 part2)
   (printf "Part 1: ~a\nPart 2: ~a\n" part1 part2))
-
-
-;; Grid helpers ;;
-;; A grid of values might be stored in three different ways:
-;; - As a hashtable from coordinates (list x y) to values; or
-;; - As a vector of vectors of values; or
-;; - As a list of lists of values.
-;; coord = (list? number? number?)
-;; Coordinate axes point right (x-axis) and down (y-axis).
-
-;; make-vector-grid : number -> number -> number -> vector-grid
-(define (make-vector-grid width height [default 0])
-  (build-vector height (λ (_) (make-vector width default))))
-
-;; vector-grid-update : vector-grid -> coord -> a -> void
-;; Set the vector grid to given value at position (row, col)
-(define (vector-grid-update vector-grid coord value)
-  (vector-set! (vector-ref vector-grid (second coord)) (first coord) value))
-
-;; vector-grid-ref* : (vectorof (vectorof any)) -> coord -> any -> any
-;; Given coordinates (x, y), in the yth vector, find the xth element.
-;; If either x or y are beyond the indices of the vectors,
-;; return the default value provided.
-(define (vector-grid-ref* grid coord failure-result)
-  (match-let ([(list x y) coord]
-              [y-len (vector-length grid)])
-    (if (or (< y 0) (>= y y-len))
-        failure-result
-        (let* ([row (vector-ref grid y)]
-               [x-len (vector-length row)])
-          (if (or (< x 0) (>= x x-len))
-              failure-result
-              (vector-ref row x))))))
-
-;; lists->vectors : list-grid -> vector-grid
-(define (lists->vectors list-grid)
-  (list->vector (map list->vector list-grid)))
-
-;; vectors->lists : vector-grid -> list-grid
-(define (vectors->lists vector-grid)
-  (map vector->list (vector->list vector-grid)))
-
-;; lists->hash : list-grid -> hash-grid
-(define (lists->hash list-grid)
-  (let ([width (length (first list-grid))]
-        [length (length list-grid)])
-    (for*/fold ([hash-grid (hash)])
-               ([x (in-range width)]
-                [y (in-range length)])
-      (hash-set hash-grid (list x y) (list-ref (list-ref list-grid y) x)))))
-
-;; hash->vectors : hash-grid -> number -> vector-grid
-;; When a coordinate is not in the hash-grid,
-;; the vector-grid takes on the default value.
-(define (hash->vectors hash-grid [default 0])
-  (let* ([keys (hash-keys hash-grid)]
-         [xs (map first keys)]
-         [ys (map second keys)]
-         [min-x (apply min xs)]
-         [min-y (apply min ys)]
-         [width  (add1 (- (apply max xs) min-x))]
-         [height (add1 (- (apply max ys) min-y))]
-         [vector-grid (make-vector-grid width height default)])
-    (hash-for-each
-     hash-grid (λ (coord val)
-                 (let ([x (- (first coord) min-x)]
-                       [y (- (second coord) min-y)])
-                   (vector-set! (vector-ref vector-grid y) x val))))
-    vector-grid))
-
-;; show-list-grid : (hashof (value => char)) -> list-grid -> void
-(define (show-list-grid char-hash list-grid)
-  (for-each
-   displayln
-   (map (∘ list->string
-           (∂ map (∂ hash-ref char-hash)))
-        list-grid)))
-
-;; show-vector-grid : (hashof (value => char)) -> vector-grid -> void
-(define (show-vector-grid char-hash vector-grid)
-  (show-list-grid char-hash (vectors->lists vector-grid)))
-
-;; show-hash-grid : (hashof (value => char)) -> hash-grid -> number -> void
-(define (show-hash-grid char-hash hash-grid [default 0])
-  (show-vector-grid char-hash (hash->vectors hash-grid default)))
 
 
 ;; String helpers ;;
@@ -158,6 +73,10 @@
 ;; convert it to the number it represents
 (define (string->binary str)
   (string->number (string-append "#b" str)))
+
+;; string->vector : string? -> (vectorof char?)
+(define (string->vector str)
+  (list->vector (string->list str)))
 
 ;; string-replaces : string? -> (listof (list? string? string?)) -> string
 ;; Perform string replacements in order,

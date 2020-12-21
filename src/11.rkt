@@ -2,7 +2,7 @@
 
 (require "../lib.rkt")
 
-(define input (lists->vectors (map string->list (problem-input 11))))
+(define input (list->vector (map string->vector (problem-input 11))))
 (define width (vector-length (vector-ref input 0)))
 (define length (vector-length input))
 
