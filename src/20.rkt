@@ -105,61 +105,74 @@
                      [image (map #{drop-right (drop % 1) 1} (drop-right (drop image 1) 1))])
                 (map append rows image))))))
 
-(define dimsize (length image))
-(define image-vectors (lists->vectors image))
-(define (vector-pos r c) (vector-ref (vector-ref image-vectors r) c))
+;; Some vector grid helpers
+;; N.B. coord? = (row, column) = (list number? number?)
+
+;; lists->vectors: (listof (listof a)) -> (vectorof (vectorof a))
+(define (lists->vectors list-grid)
+  (list->vector (map list->vector list-grid)))
+
+;; vectors->lists: (vectorof (vectorof a)) -> (listof (listof a))
+(define (vectors->lists vector-grid)
+  (vector->list (vector-map vector->list vector-grid)))
+
+;; vector-grid-ref: (vectorof (vectorof a)) coord -> a
+(define (vector-grid-ref vector-grid coord)
+  (vector-ref (vector-ref vector-grid (first coord)) (second coord)))
+
+;; vector-grid-set!: (vectorof (vectorof a)) coord a -> void
+(define (vector-grid-set! vector-grid coord v)
+  (vector-set! (vector-ref vector-grid (first coord)) (second coord) v))
 
 #| (r, c) = O
                   #
 #    ##    ##    O##   <--- friend
  #  #  #  #  #  #
 |#
-(define (sea-monster-coords r c)
-  (list `(,(- r 1) ,(+ c 1))
-        `(,r ,c)
-        `(,r ,(+ c 1))
-        `(,r ,(+ c 2))
-        `(,r ,(- c 5))
-        `(,r ,(- c 6))
-        `(,r ,(- c 11))
-        `(,r ,(- c 12))
-        `(,r ,(- c 17))
-        `(,(+ r 1) ,(- c 1))
-        `(,(+ r 1) ,(- c 4))
-        `(,(+ r 1) ,(- c 7))
-        `(,(+ r 1) ,(- c 10))
-        `(,(+ r 1) ,(- c 13))
-        `(,(+ r 1) ,(- c 16))))
+(define (sea-monster-coords coord)
+  (match-let ([(list r c) coord])
+    (list `(,r ,c)
+          `(,r ,(+ c 1))
+          `(,r ,(+ c 2))
+          `(,(- r 1) ,(+ c 1))
+          `(,r ,(- c 5))
+          `(,r ,(- c 6))
+          `(,r ,(- c 11))
+          `(,r ,(- c 12))
+          `(,r ,(- c 17))
+          `(,(+ r 1) ,(- c 1))
+          `(,(+ r 1) ,(- c 4))
+          `(,(+ r 1) ,(- c 7))
+          `(,(+ r 1) ,(- c 10))
+          `(,(+ r 1) ,(- c 13))
+          `(,(+ r 1) ,(- c 16)))))
 
-;; sea-monster?: number? number? -> boolean?
-(define (sea-monster? r c)
-  (define (pound? c) (char=? c #\#))
-  (andmap #{pound? (vector-pos (first %) (second %))}
-          (sea-monster-coords r c)))
+;; sea-monster?: coord? -> boolean?
+(define (sea-monster? image-vectors coord)
+  (andmap #{char=? (vector-grid-ref image-vectors %) #\#}
+          (sea-monster-coords coord)))
 
 ;; A list of the neck coordinates of sea monsters
 ;; sea-monsters: (listof (list number? number?))
 (define sea-monsters
-  (for*/list ([r (range 1 (sub1 dimsize))]
-              [c (range 17 (- dimsize 2))]
-              #:when (and (andmap #{char=? (vector-pos r %)}
-                                  (range c (+ c 3)))
-                          (sea-monster? r c)))
-    (list r c)))
+  (let ([image-vectors (lists->vectors image)]
+        [dimsize (length image)])
+    (for*/list ([r (range 1 (sub1 dimsize))]
+                [c (range 17 (- dimsize 2))]
+                #:when (sea-monster? image-vectors (list r c)))
+      (list r c))))
 
-;; Replace the # of a sea monster with O in image-vectors
-(define (reveal-sea-monster! r c)
-  (for-each #{vector-set! (vector-ref image-vectors (first %)) (second %) #\O}
-            (sea-monster-coords r c)))
-
-;; Reveal the sea monsters in image-vectors, then write to file
+;; Draw sea monsters in O and write to file
 (define (draw-sea-monsters!)
-  (for-each #{reveal-sea-monster! (first %) (second %)} sea-monsters)
-  (display-lines-to-file
-   (map (λ~> vector->list list->string)
-        (vector->list image-vectors))
-   "../input/20-image.txt"
-   #:exists 'replace))
+  (let ([image-vectors (lists->vectors image)])
+    (for* ([sea-monster sea-monsters]
+           [coord (sea-monster-coords sea-monster)])
+      (vector-grid-set! image-vectors coord #\O))
+    (display-lines-to-file
+     (map list->string
+          (vectors->lists image-vectors))
+     "../input/20-image.txt"
+     #:exists 'replace)))
 
 (define part1
   (* (tile-name (hash-ref image-hash (list 0 0)))
@@ -169,6 +182,6 @@
 
 (define part2
   (- (count #{char=? % #\#} (apply append image))
-     (* (length sea-monsters) 15)))
+     (* (length sea-monsters) (length (sea-monster-coords (list 0 0))))))
 
 (show-solution part1 part2)
