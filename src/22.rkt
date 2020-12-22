@@ -1,0 +1,82 @@
+#lang curly-fn racket
+
+(require "../lib.rkt")
+
+(define input (problem-input-grouped 22))
+
+(define-values (player1 player2)
+  #;(values '(9 2 6 3 1) '(5 8 4 7 10))
+  (match input
+    [(list p1 p2)
+     (values (map string->number (rest (string-lines p1)))
+             (map string->number (rest (string-lines p2))))]))
+
+(define (combat player1 player2)
+  (cond
+    [(empty? player1) player2]
+    [(empty? player2) player1]
+    [else
+     (let ([p1 (first player1)]
+           [p2 (first player2)])
+       (if (> p1 p2)
+           (combat (append (rest player1) (list p1 p2))
+                   (rest player2))
+           (combat (rest player1)
+                   (append (rest player2) (list p2 p1)))))]))
+
+(define memo (make-hash '()))
+
+(define (recursive-combat player1 player2 game)
+  (if (hash-has-key? memo (list player1 player2))
+      (hash-ref memo (list player1 player2))
+      #;(printf "~a " game)
+      (let loop ([player1* player1]
+                 [player2* player2]
+                 [seen (set)])
+        (cond
+          [(empty? player1*)
+           (hash-set! memo (list player1 player2) (list #f player2*))
+           (list #f player2*)]
+          [(empty? player2*)
+           (hash-set! memo (list player1 player2) (list #t player1*))
+           (list #t player1*)]
+          [(set-member? seen (list player1* player2*))
+           (hash-set! memo (list player1 player2) (list #t player1*))
+           (list #t player1*)]
+          [else
+           (let ([p1 (first player1*)]
+                 [p2 (first player2*)]
+                 [seen (set-add seen (list player1* player2*))])
+             (cond
+               [(and (<= p1 (sub1 (length player1*)))
+                     (<= p2 (sub1 (length player2*))))
+                (match-let ([(list p1-won? deck) (recursive-combat (take (rest player1*) p1) (take (rest player2*) p2) (add1 game))])
+                  (if p1-won?
+                      (loop (append (rest player1*) (list p1 p2))
+                            (rest player2*)
+                            seen)
+                      (loop (rest player1*)
+                            (append (rest player2*) (list p2 p1))
+                            seen)))]
+               [(> p1 p2)
+                (loop (append (rest player1*) (list p1 p2))
+                      (rest player2*)
+                      seen)]
+               [(< p1 p2)
+                (loop (rest player1*)
+                      (append (rest player2*) (list p2 p1))
+                      seen)]))]))))
+
+(define part1
+  (let ([deck (combat player1 player2)])
+    (for/sum ([card deck]
+              [score (reverse (range 1 (add1 (length deck))))])
+      (* card score))))
+
+(define part2
+  (match-let ([(list _ deck) (recursive-combat player1 player2 1)])
+    (for/sum ([card deck]
+              [score (reverse (range 1 (add1 (length deck))))])
+      (* card score))))
+
+(show-solution part1 part2)
