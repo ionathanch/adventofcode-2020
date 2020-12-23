@@ -58,16 +58,15 @@
                   (append (rest player2) (list p2 p1))
                   seen)]))])))
 
+(define (score deck)
+  (for/sum ([card deck]
+            [score (reverse (range 1 (add1 (length deck))))])
+    (* card score)))
+
 (define part1
-  (let ([deck (combat player1 player2)])
-    (for/sum ([card deck]
-              [score (reverse (range 1 (add1 (length deck))))])
-      (* card score))))
+  (score (combat player1 player2)))
 
 (define part2
-  (match-let ([(list _ deck) (recursive-combat player1 player2)])
-    (for/sum ([card deck]
-              [score (reverse (range 1 (add1 (length deck))))])
-      (* card score))))
+  (score (second (recursive-combat player1 player2))))
 
 (show-solution part1 part2)
