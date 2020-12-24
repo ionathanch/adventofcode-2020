@@ -8,17 +8,17 @@
 (define input (map parse (problem-input 24)))
 
 (define (walk path)
-  (let loop ([coord (list 0 0)]
-             [path path])
-    (if (empty? path)
-        coord
-        (match (list (first path) coord)
-          [`(e  (,x ,y)) (loop (list (add1 x) y) (rest path))]
-          [`(w  (,x ,y)) (loop (list (sub1 x) y) (rest path))]
-          [`(se (,x ,y)) (loop (list x (add1 y)) (rest path))]
-          [`(nw (,x ,y)) (loop (list x (sub1 y)) (rest path))]
-          [`(ne (,x ,y)) (loop (list (add1 x) (sub1 y)) (rest path))]
-          [`(sw (,x ,y)) (loop (list (sub1 x) (add1 y)) (rest path))]))))
+  (for/fold ([x 0]
+             [y 0]
+             #:result (list x y))
+            ([dir path])
+    (match dir
+      ['e  (values (add1 x) y)]
+      ['w  (values (sub1 x) y)]
+      ['se (values x (add1 y))]
+      ['nw (values x (sub1 y))]
+      ['ne (values (add1 x) (sub1 y))]
+      ['sw (values (sub1 x) (add1 y))])))
 
 (define (keep-flipped coords)
   (for/fold ([keep (set)])
@@ -29,9 +29,12 @@
 
 (define (neighbours coord)
   (match-let ([(list x y) coord])
-    (list (list (add1 x) y) (list (sub1 x) y)
-          (list x (add1 y)) (list x (sub1 y))
-          (list (add1 x) (sub1 y)) (list (sub1 x) (add1 y)))))
+    `((,(add1 x) ,y)
+      (,(sub1 x) ,y)
+      (,x ,(add1 y))
+      (,x ,(sub1 y))
+      (,(add1 x) ,(sub1 y))
+      (,(sub1 x) ,(add1 y)))))
 
 (define (flip coords)
   (let* ([xs (set-map coords first)]  [min-x (sub1 (apply min xs))] [max-x (add1 (apply max xs))]
